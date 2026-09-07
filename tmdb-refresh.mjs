@@ -28,6 +28,23 @@ const MONTHS_BACK = 18;
 const DISCOVER = true;                 // set false to stop auto-discovering new titles
 const REGION_PREF = ["US", "GB", "CA", "AU"];
 
+// keep the catalogue to the services + genre vocabulary the app knows
+const KNOWN_SERVICES = new Set(["Netflix","Prime Video","Apple TV+","Disney+","Max","Hulu","Peacock","Paramount+","Starz","MGM+","BBC","BritBox","Acorn TV","PBS Masterpiece","In theatres"]);
+const SERVICE_ALIASES = {
+  "Amazon Prime Video":"Prime Video",
+  "HBO Max":"Max","HBO Max Amazon Channel":"Max","HBO Max on U-Next":"Max",
+  "Disney Plus":"Disney+",
+  "Apple TV":"Apple TV+",
+  "Paramount Plus":"Paramount+","Paramount Plus Premium":"Paramount+",
+  "Peacock Premium":"Peacock",
+  "STARZPLAY":"Starz","Starz Amazon Channel":"Starz","Starz Roku Premium Channel":"Starz",
+  "Britbox Apple TV channel":"BritBox",
+  "PBS Masterpiece Amazon Channel":"PBS Masterpiece",
+};
+const canonicalService = (s) => KNOWN_SERVICES.has(s) ? s : (SERVICE_ALIASES[s] || null);
+const GENRE_ALIASES = { "Sci-Fi & Fantasy":"Sci-fi & fantasy", "Science Fiction":"Sci-fi & fantasy", "Fantasy":"Sci-fi & fantasy", "Action & Adventure":"Action" };
+const normGenres = (a) => { const o=[]; (a||[]).forEach((g)=>{ const m=GENRE_ALIASES[g]||g; if(o.indexOf(m)<0)o.push(m); }); return o; };
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function get(path, params = {}) {
   // drop undefined/null/"" so we never send `key=undefined` to TMDB
@@ -153,6 +170,7 @@ async function discover(existingTmdbIds) {
             ["first_air_date.gte"]:       kind === "tv"    ? from : undefined,
             ["primary_release_date.lte"]: kind === "movie" ? today : undefined,
             ["first_air_date.lte"]:       kind === "tv"    ? today : undefined,
+            with_original_language: "en",
             sort_by: "popularity.desc", page, ...extra,
           });
           for (const r of (res.results || [])) {
@@ -208,6 +226,22 @@ async function main() {
   const titles = new Set(out.map((x) => cleanTitle(x.title).toLowerCase()));
   for (const e of extra) if (!titles.has(cleanTitle(e.title).toLowerCase())) out.push(e);
   console.log(`discovered ${extra.length} new titles`);
+
+  // tidy pass: keep the app's vocabulary. Canonicalize services + genres, and
+  // drop discovered titles whose only home is a service the app doesn't know
+  // (regional / live-TV / reseller labels). Curated titles are always kept.
+  const cleaned = [];
+  let droppedSvc = 0;
+  for (const it of out) {
+    const discovered = /^tmdb-/.test(it.id);
+    const cs = canonicalService(it.service);
+    if (discovered && !cs) { droppedSvc++; continue; }
+    it.service = cs || it.service;
+    it.genres = normGenres(it.genres);
+    cleaned.push(it);
+  }
+  out.length = 0; out.push(...cleaned);
+  if (droppedSvc) console.log(`dropped ${droppedSvc} titles on unknown/regional services`);
 
   const result = {
     meta: {
