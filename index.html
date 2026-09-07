@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Watchlist">
+<meta name="theme-color" content="#2C2138">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232C2138'/><circle cx='20' cy='22' r='4' fill='%23E8A13C'/><circle cx='32' cy='22' r='4' fill='%23F0C079'/><circle cx='44' cy='22' r='4' fill='%23E8A13C'/><path d='M27 32 L45 42 L27 52 Z' fill='%23FCFAF7'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232C2138'/><circle cx='20' cy='22' r='4' fill='%23E8A13C'/><circle cx='32' cy='22' r='4' fill='%23F0C079'/><circle cx='44' cy='22' r='4' fill='%23E8A13C'/><path d='M27 32 L45 42 L27 52 Z' fill='%23FCFAF7'/></svg>">
+<title>The Watchlist</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#FCFAF7}
+body{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wl-root{--ink:#241B2E;--ink-soft:#6E6377;--paper:#FCFAF7;--panel:#2C2138;--panel-2:#3A2C4A;
+  --amber:#E8A13C;--amber-deep:#B9741F;--line:#EAE2E8;--rose:#F3EDF2;--green:#3F8F5B;
+  font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--paper);
+  min-height:100dvh;-webkit-font-smoothing:antialiased}
+.wl-root *{box-sizing:border-box}
+.wl-head{background:var(--panel);color:var(--paper);padding-top:env(safe-area-inset-top);
+  background-image:radial-gradient(120% 140% at 85% -20%,#47365b 0%,var(--panel) 55%)}
+.wl-head-inner{max-width:880px;margin:0 auto;padding:26px 22px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.wl-title{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:38px;line-height:1;margin:0;font-weight:600;letter-spacing:.2px}
+.wl-marquee{display:flex;gap:9px;margin:12px 0 10px}
+.wl-marquee i{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(232,161,60,.55);display:block}
+.wl-marquee i:nth-child(even){background:#F0C079}
+.wl-sub{margin:0;color:#D8CFE0;font-size:15.5px;max-width:46ch;line-height:1.45}
+.wl-add{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#2A1B06;border:none;border-radius:12px;
+  padding:13px 18px;font-size:16px;font-weight:650;cursor:pointer;box-shadow:0 2px 0 var(--amber-deep);white-space:nowrap}
+.wl-add:hover{background:#F0AE4E}
+.wl-add:active{transform:translateY(1px);box-shadow:0 1px 0 var(--amber-deep)}
+.wl-main{max-width:880px;margin:0 auto;padding:20px 22px calc(60px + env(safe-area-inset-bottom))}
+.wl-tabs{display:flex;gap:4px;background:var(--rose);border-radius:13px;padding:5px;margin-bottom:16px}
+.wl-tab{flex:1;border:none;background:transparent;color:var(--ink-soft);font-size:16px;font-weight:650;padding:12px;border-radius:9px;cursor:pointer}
+.wl-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(36,27,46,.12)}
+.wl-kind{display:flex;gap:8px;margin-bottom:14px}
+.wl-kind .wl-seg-btn{flex:0 0 auto;min-width:120px}
+.wl-controls{display:flex;gap:10px;align-items:stretch;margin-bottom:14px;flex-wrap:wrap}
+.wl-search{flex:1;min-width:180px;display:flex;align-items:center;gap:9px;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:0 13px}
+.wl-search:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,161,60,.22)}
+.wl-search input{border:none;outline:none;font:inherit;font-size:16px;padding:11px 0;flex:1;background:transparent;color:var(--ink)}
+.wl-search svg{color:var(--ink-soft);flex:0 0 auto}
+.wl-groupby{display:flex;gap:6px;flex:0 0 auto}
+.wl-groupby .wl-seg-btn{min-width:92px}
+.wl-filters{display:flex;gap:9px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+.wl-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;background:transparent;border:1.5px solid var(--line);
+  color:var(--ink-soft);border-radius:999px;padding:9px 15px;font-size:14.5px;font-weight:550;cursor:pointer;white-space:nowrap}
+.wl-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.wl-chip:hover:not(.on){border-color:#cfc4cd}
+.wl-chip.sm{padding:7px 12px;font-size:13.5px}
+.wl-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.wl-browsehint{margin:2px 0 6px;font-size:14px;color:var(--ink-soft)}
+.wl-browsehint strong{color:var(--amber-deep)}
+.wl-group{margin-top:20px}
+.wl-month{display:flex;align-items:baseline;gap:12px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.wl-month h2{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:23px;margin:0;font-weight:600}
+.wl-count{color:var(--ink-soft);font-size:14px;font-variant-numeric:tabular-nums}
+.wl-year{background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;letter-spacing:1.5px;padding:6px 12px;border-radius:8px;margin:22px 0 0}
+.wl-year + .wl-group{margin-top:6px}
+.wl-pband{display:flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:15px;padding:9px 13px;border-radius:9px}
+.wl-pc{margin-left:auto;background:rgba(255,255,255,.28);border-radius:999px;font-size:12.5px;padding:2px 9px;font-weight:700}
+.wl-mark{background:#FBE7C4;border-radius:3px;padding:0 2px}
+.wl-list{list-style:none;margin:0;padding:0}
+.wl-row{display:flex;gap:14px;align-items:flex-start;padding:17px 4px;border-bottom:1px solid var(--line)}
+.wl-spine{width:5px;align-self:stretch;border-radius:3px;flex:0 0 auto;min-height:40px}
+.wl-body{flex:1;min-width:0}
+.wl-name{font-size:19px;font-weight:650;margin:0 0 7px;line-height:1.25}
+.wl-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:15px}
+.wl-date{display:inline-flex;align-items:center;gap:6px;color:var(--amber-deep);font-weight:600}
+.wl-rel{background:var(--rose);color:#7A4C8A;font-weight:600;font-size:13px;padding:3px 9px;border-radius:999px}
+.wl-cad{color:var(--ink);font-weight:550}
+.wl-cad::before{content:"·";margin-right:12px;color:var(--ink-soft)}
+.wl-svc{display:inline-flex;align-items:center;gap:7px;color:var(--ink-soft);font-weight:550}
+.wl-status{display:inline-flex;align-items:center;gap:6px;margin:8px 0 0;font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.wl-status.done{color:var(--green)}
+.wl-desc{margin:7px 0 0;color:var(--ink-soft);font-size:14.5px;line-height:1.4;max-width:62ch}
+.wl-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.wl-tag{font-size:12px;font-weight:600;color:var(--ink-soft);background:var(--rose);border-radius:6px;padding:3px 8px}
+.wl-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.wl-trailer{display:inline-flex;align-items:center;gap:7px;text-decoration:none;border:1.5px solid var(--amber);
+  color:var(--amber-deep);background:#fff;border-radius:10px;padding:9px 13px;font-size:14.5px;font-weight:600;cursor:pointer}
+.wl-trailer:hover{background:#FDF3E3}
+.wl-icon{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1.5px solid var(--line);
+  background:#fff;border-radius:10px;color:var(--ink-soft);cursor:pointer}
+.wl-icon:hover{border-color:#cfc4cd;color:var(--ink)}
+.wl-check{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1.5px solid var(--line);background:#fff;border-radius:50%;color:var(--ink-soft);cursor:pointer}
+.wl-check:hover{border-color:var(--green);color:var(--green)}
+.wl-check.on{background:var(--green);border-color:var(--green);color:#fff}
+.wl-new{display:inline-block;background:var(--amber);color:#2A1B06;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:6px;margin-left:8px;vertical-align:middle}
+.wl-tabdot{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;margin-left:7px;background:var(--amber);color:#2A1B06;border-radius:999px;font-size:11px;font-weight:800;vertical-align:middle}
+.wl-addbtn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;padding:11px 15px;font-size:14.5px;
+  font-weight:650;cursor:pointer;background:var(--amber);color:#2A1B06;box-shadow:0 2px 0 var(--amber-deep)}
+.wl-addbtn:active{transform:translateY(1px);box-shadow:0 1px 0 var(--amber-deep)}
+.wl-addbtn.on{background:#EAF3EC;color:var(--green);box-shadow:none;border:1.5px solid #BFE0C8}
+.wl-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:15px;padding:2px 0}
+.wl-danger{display:inline-flex;align-items:center;gap:6px;background:#B4322B;color:#fff;border:none;border-radius:9px;padding:8px 13px;font-weight:600;font-size:14.5px;cursor:pointer}
+.wl-danger:hover{background:#C33A32}
+.wl-ghost{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--line);color:var(--ink);border-radius:11px;padding:12px 17px;font-size:15.5px;font-weight:600;cursor:pointer}
+.wl-ghost:hover{border-color:#cfc4cd}
+.wl-ghost.sm{padding:8px 13px;font-size:14.5px;border-radius:9px}
+.wl-empty{color:var(--ink-soft);padding:50px 0;text-align:center}
+.wl-empty-card{text-align:center;border:1.5px dashed var(--line);border-radius:16px;padding:40px 24px;margin-top:12px;background:#fff}
+.wl-empty-title{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:22px;margin:0 0 6px}
+.wl-empty-body{color:var(--ink-soft);margin:0 0 18px;font-size:15.5px}
+.wl-empty-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.wl-foot{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);text-align:center}
+.wl-link{background:none;border:none;color:var(--amber-deep);font-size:14.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.wl-link:hover{text-decoration:underline}
+.wl-note{color:var(--ink-soft);font-size:13px;margin:8px 0 0}
+.wl-overlay{position:fixed;inset:0;background:rgba(36,27,46,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:24px;z-index:50;overflow-y:auto}
+.wl-modal{background:var(--paper);border-radius:18px;width:100%;max-width:540px;margin:auto;box-shadow:0 24px 60px rgba(36,27,46,.32);overflow:hidden}
+.wl-modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;background:var(--panel);color:var(--paper)}
+.wl-modal-head h2{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:22px;margin:0;font-weight:600}
+.wl-modal-head .wl-icon{background:transparent;border-color:rgba(255,255,255,.25);color:#EADFF0}
+.wl-form{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.wl-field{display:flex;flex-direction:column;gap:7px}
+.wl-field>span{font-size:14.5px;font-weight:600}
+.wl-field em{color:var(--ink-soft);font-style:normal;font-weight:400}
+.wl-field input,.wl-field select{font:inherit;font-size:16px;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);width:100%}
+.wl-field input:focus,.wl-field select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,161,60,.22)}
+.wl-toggle{display:inline-flex;align-items:center;gap:9px;background:none;border:none;color:var(--ink);font-size:14.5px;font-weight:550;cursor:pointer;padding:2px 0;margin-top:2px}
+.wl-toggle-box{width:22px;height:22px;border:1.5px solid var(--line);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#fff}
+.wl-toggle.on .wl-toggle-box{background:var(--amber);border-color:var(--amber);color:#2A1B06}
+.wl-seg{display:flex;gap:8px}
+.wl-seg-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:14.5px;font-weight:600;
+  padding:11px 8px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink-soft);cursor:pointer}
+.wl-seg-btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.wl-genres{display:flex;flex-wrap:wrap;gap:7px}
+.wl-err{color:#B4322B;font-size:14px;margin:0;font-weight:550}
+.wl-modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px 22px}
+@media (max-width:580px){
+  .wl-head-inner{flex-direction:column;align-items:stretch}
+  .wl-add{justify-content:center}
+  .wl-row{flex-wrap:wrap}
+  .wl-actions{width:100%;padding-left:19px;margin-top:6px}
+  .wl-trailer{flex:1;justify-content:center}
+  .wl-addbtn{flex:1;justify-content:center}
+  .wl-kind .wl-seg-btn{flex:1;min-width:0}
+}
+@media (prefers-reduced-motion:reduce){.wl-root *{transition:none!important}}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div id="app" class="wl-root"></div>
+<script>
+"use strict";
+var SERVICES = {"Netflix":"#E50914","Prime Video":"#1CA9E0","Apple TV+":"#3A3A42","Disney+":"#113CCF","Max":"#7C3AED","Hulu":"#17B15A","Peacock":"#5B54E6","Paramount+":"#0064FF","Starz":"#0E9AA5","MGM+":"#C6A15B","BBC":"#F04E37","BritBox":"#E4007C","Acorn TV":"#5A7D2A","PBS Masterpiece":"#2A3F8F","In theatres":"#55505C"};
+var DEFAULT_EPISODES = {"Netflix":8,"Disney+":8,"Prime Video":8,"Apple TV+":10,"Max":8,"Hulu":8,"Peacock":8,"Paramount+":10,"Starz":10,"MGM+":8,"BBC":6,"BritBox":6,"Acorn TV":6,"PBS Masterpiece":5};
+var CATALOGUE = [{"id":"s-hod-3","type":"show","title":"House of the Dragon — Season 3","service":"Max","date":"2026-06-21","endDate":"2026-08-09","cadence":"weekly","genres":["Sci-fi & fantasy","Drama"],"note":"The Targaryen civil war — the Dance of the Dragons — rages on in this Game of Thrones prequel. Season three, complete now."},{"id":"s-silo-3","type":"show","title":"Silo — Season 3","service":"Apple TV+","date":"2026-07-03","endDate":"2026-09-04","cadence":"weekly","genres":["Sci-fi & fantasy","Drama"],"note":"In a giant underground silo, the last of humanity lives by rigid rules no one may question — until engineer Juliette starts digging. Season three (its finale just aired), on Apple TV+."},{"id":"s-ted-lasso","type":"show","title":"Ted Lasso — Season 4","service":"Apple TV+","date":"2026-08-05","cadence":"weekly","episodes":12,"genres":["Comedy","Drama"],"note":"The relentlessly upbeat American coach returns to AFC Richmond three years on, still armed with biscuits, pep talks and big feelings. Season four brings more locker-room heart and hard-won comedy."},{"id":"s-reacher","type":"show","title":"Reacher — Season 4","service":"Prime Video","date":"2026-08-12","cadence":"weekly","genres":["Action","Crime","Thriller"],"note":"Alan Ritchson is back as Jack Reacher, the ex-army drifter who can't walk past an injustice. Season four drops him into a fresh conspiracy where his fists and his deductions do the talking."},{"id":"s-tires","type":"show","title":"Tires — Season 3","service":"Netflix","date":"2026-08-13","cadence":"binge","genres":["Comedy"],"note":"Shane Gillis's crude workplace comedy set in a struggling auto-repair chain, where a hapless manager and his needling cousin trade insults between customers. Season three piles on the low-stakes chaos."},{"id":"s-lanterns","type":"show","title":"Lanterns","service":"Max","date":"2026-08-16","cadence":"weekly","genres":["Sci-fi & fantasy","Mystery"],"note":"A grounded, True-Detective-style take on DC's Green Lanterns: veteran Hal Jordan and rookie John Stewart work an earthbound murder that opens onto a much larger cosmic threat."},{"id":"s-dark-matter","type":"show","title":"Dark Matter — Season 2","service":"Apple TV+","date":"2026-08-28","cadence":"weekly","genres":["Sci-fi & fantasy","Thriller"],"note":"Based on Blake Crouch's novel, a physicist is torn from his life into a version he never chose, and has to fight back across a maze of parallel worlds. Season two widens the multiverse and the danger."},{"id":"s-gentlemen","type":"show","title":"The Gentlemen","service":"Netflix","date":"2026-09-03","cadence":"binge","genres":["Crime","Comedy"],"note":"Guy Ritchie's stylish crime caper: an aristocrat inherits the family estate and discovers a sprawling cannabis empire buried beneath it. Fast-talking gangsters and double-crosses follow."},{"id":"s-chad-powers","type":"show","title":"Chad Powers","service":"Hulu","date":"2026-09-03","cadence":"binge","genres":["Comedy"],"note":"Glen Powell plays a disgraced college quarterback who dons a prosthetic disguise and a fake name to sneak back onto a struggling team. A broad sports comedy; all episodes at once."},{"id":"s-collision","type":"show","title":"Collision","service":"Max","date":"2026-09-07","cadence":"weekly","genres":["Drama","Mystery"],"note":"A new HBO drama; plot details are being kept under wraps ahead of release."},{"id":"s-neagley","type":"show","title":"Neagley","service":"Prime Video","date":"2026-09-16","cadence":"weekly","genres":["Crime","Mystery","Action"],"note":"A Reacher spinoff centred on Frances Neagley, his fiercely capable former colleague, running an investigation of her own. The same lean, punchy action with a sharper solo edge."},{"id":"s-slow-horses","type":"show","title":"Slow Horses — Season 6","service":"Apple TV+","date":"2026-09-16","cadence":"weekly","episodes":6,"genres":["British","Thriller","Drama"],"note":"Gary Oldman's Jackson Lamb leads Slough House, MI5's dumping ground for disgraced spies who keep stumbling into cases the service would rather bury. Season six brings another darkly funny espionage tangle."},{"id":"s-different-world","type":"show","title":"A Different World","service":"Netflix","date":"2026-09-24","cadence":"binge","genres":["Comedy","Drama"],"note":"A revival of the beloved Cosby Show spinoff set at the historically Black Hillman College, catching up with a new generation of students. Warm, funny and socially sharp."},{"id":"s-east-of-eden","type":"show","title":"East of Eden","service":"Netflix","date":"2026-10-01","cadence":"binge","genres":["Drama"],"note":"A limited-series adaptation of Steinbeck's sweeping novel of family, rivalry and inheritance across generations of a California farming clan, with Florence Pugh at its centre."},{"id":"s-war","type":"show","title":"War","service":"Max","date":"2026-10-01","cadence":"weekly","genres":["Drama"],"note":"A new HBO drama; details haven't been widely released yet."},{"id":"s-coven-academy","type":"show","title":"Coven Academy","service":"Hulu","date":"2026-10-02","cadence":"binge","genres":["Drama","Sci-fi & fantasy"],"note":"A supernatural teen drama set at a school for young witches, where secrets and dark magic simmer beneath the coursework. The full season drops at once."},{"id":"s-gilded-age","type":"show","title":"The Gilded Age — Season 4","service":"Max","date":"2026-11-01","cadence":"weekly","genres":["Drama"],"note":"Julian Fellowes's opulent period drama pits old-money New York families against the brash new-money set in 1880s Manhattan. Season four escalates the social warfare."},{"id":"s-black-doves","type":"show","title":"Black Doves — Season 2","service":"Netflix","date":"2026-11-05","cadence":"binge","genres":["British","Thriller"],"note":"Keira Knightley plays a politician's wife who is secretly a spy-for-hire; when her lover is murdered, an old friend (Ben Whishaw) is sent to protect her. A slick, witty London thriller, season two."},{"id":"s-rings-of-power","type":"show","title":"The Rings of Power — Season 3","service":"Prime Video","date":"2026-11-11","cadence":"weekly","genres":["Sci-fi & fantasy"],"note":"Amazon's Lord of the Rings prequel continues its Second Age saga of elves, dwarves and the slow rise of Sauron. Season three deepens the war for Middle-earth, weekly."},{"id":"s-the-body","type":"show","title":"The Body","service":"Netflix","date":"2026-11-11","cadence":"binge","genres":["Drama","Mystery"],"note":"A new Netflix drama; plot details are still thin ahead of release."},{"id":"s-12-12-12","type":"show","title":"12 12 12","service":"Apple TV+","date":"2026-11-13","cadence":"weekly","genres":["Drama"],"note":"A new Apple TV+ drama; specifics haven't been released yet."},{"id":"s-the-chosen","type":"show","title":"The Chosen","service":"Prime Video","date":"2026-11-15","cadence":"weekly","genres":["Drama"],"note":"The acclaimed, crowdfunded retelling of the life of Jesus through the eyes of those who knew him, continuing its journey through the Gospels."},{"id":"s-percy-jackson","type":"show","title":"Percy Jackson and the Olympians — Season 3","service":"Disney+","date":"2026-11-20","cadence":"weekly","genres":["Sci-fi & fantasy"],"note":"Disney+'s adaptation of Rick Riordan's demigod adventures continues, as Percy and his friends face new mythological threats. Season three follows the next book, weekly."},{"id":"s-yellowjackets","type":"show","title":"Yellowjackets — Season 4","service":"Paramount+","date":"2026-11-20","cadence":"weekly","episodes":10,"genres":["Drama","Mystery","Thriller"],"note":"The final season of the survival thriller, cutting between a girls' soccer team stranded in the wilderness and the haunted adults they became. On Paramount+ in Canada."},{"id":"s-blade-runner","type":"show","title":"Blade Runner 2099","service":"Prime Video","date":"2026-11-25","cadence":"tba","genres":["Sci-fi & fantasy"],"note":"A live-action series set fifty years after Blade Runner 2049, extending the neo-noir world of replicants and blurred humanity."},{"id":"s-hunting-wives","type":"show","title":"The Hunting Wives — Season 2","service":"Netflix","date":"2026-11-26","cadence":"binge","genres":["Drama","Thriller"],"note":"A soapy Texas thriller in which a newcomer is drawn into a glamorous, dangerous clique of wealthy wives — and a murder. Season two turns up the heat and the secrets."},{"id":"s-witcher","type":"show","title":"The Witcher — Season 5","service":"Netflix","date":null,"tbaLabel":"Late 2026","cadence":"binge","genres":["Sci-fi & fantasy"],"note":"The fifth and final season of the fantasy epic, as monster-hunter Geralt, the sorceress Yennefer and the princess Ciri see their fates converge. Exact date not yet announced."},{"id":"s-pride-prejudice","type":"show","title":"Pride and Prejudice","service":"Netflix","date":null,"tbaLabel":"2026","cadence":"binge","genres":["British","Drama"],"note":"A new limited-series adaptation of Jane Austen's classic sparring romance between the sharp-witted Elizabeth Bennet and the proud Mr. Darcy."},{"id":"s-diplomat","type":"show","title":"The Diplomat — Season 4","service":"Netflix","date":null,"tbaLabel":"2026","cadence":"binge","genres":["Drama","Thriller"],"note":"Keri Russell stars as a career diplomat thrust into the high-wire role of U.S. Ambassador to the U.K. amid an international crisis — and a combustible marriage. Season four continues the fallout."},{"id":"s-emily-paris","type":"show","title":"Emily in Paris — Season 6","service":"Netflix","date":null,"tbaLabel":"2026","cadence":"binge","genres":["Comedy","Drama"],"note":"Lily Collins's Emily juggles work, love and wardrobe across Paris (and now Rome) in the frothy fashion comedy. Season six brings more romance and croissants."},{"id":"s-dune-prophecy","type":"show","title":"Dune: Prophecy — Season 2","service":"Max","date":null,"tbaLabel":"2026","cadence":"weekly","genres":["Sci-fi & fantasy"],"note":"A prequel set thousands of years before Dune, charting the rise of the sisterhood that becomes the Bene Gesserit. Season two continues the power games."},{"id":"s-one-piece","type":"show","title":"One Piece: Into the Grand Line — Season 2","service":"Netflix","date":null,"tbaLabel":"2026","cadence":"binge","genres":["Action","Sci-fi & fantasy"],"note":"Netflix's live-action take on the beloved manga follows Monkey D. Luffy and his pirate crew hunting the ultimate treasure. Season two sails into the Grand Line."},{"id":"s-lupin","type":"show","title":"Lupin — Season 4","service":"Netflix","date":null,"tbaLabel":"2026","cadence":"binge","genres":["Crime","Mystery","Thriller"],"note":"Assane Diop, inspired by gentleman-thief Arsène Lupin, pulls off elaborate heists as revenge for the wrong done to his father. Season four continues the cat-and-mouse in Paris."},{"id":"b-marlow-3","type":"show","title":"The Marlow Murder Club — Season 3","service":"PBS Masterpiece","date":"2026-09-06","endDate":"2026-10-11","cadence":"weekly","genres":["British","Murder mystery","Mystery"],"note":"In riverside Marlow, retired crossword-setter Judith and friends Suzie and Becks solve murders the police can't crack. Season three brings the amateur sleuths three fresh cases, on PBS Masterpiece."},{"id":"b-tommy-tuppence","type":"show","title":"Agatha Christie's Tommy and Tuppence","service":"BritBox","date":"2026-09-15","cadence":"weekly","episodes":6,"genres":["British","Murder mystery","Mystery"],"note":"Agatha Christie's married sleuths, updated to present-day London, stumble from ordinary life into espionage and murder. A breezy whodunit on BritBox."},{"id":"b-marble-hall","type":"show","title":"Marble Hall Murders","service":"PBS Masterpiece","date":null,"tbaLabel":"Fall 2026","cadence":"weekly","genres":["British","Murder mystery","Mystery"],"note":"Anthony Horowitz's meta-mystery brings back editor-turned-detective Susan Ryeland (Lesley Manville), whose life keeps mirroring the crime novels she edits. On PBS Masterpiece."},{"id":"b-professor-t","type":"show","title":"Professor T — new season","service":"PBS Masterpiece","date":"2026-10-06","cadence":"weekly","genres":["British","Mystery","Crime"],"note":"Ben Miller stars as a brilliant, germophobic Cambridge criminology professor who helps police crack baffling cases while wrestling his own compulsions. On PBS Masterpiece."},{"id":"b-maigret","type":"show","title":"Maigret","service":"PBS Masterpiece","date":"2026-10-18","cadence":"weekly","episodes":4,"genres":["British","Mystery","Crime"],"note":"A fresh adaptation of Georges Simenon's pipe-smoking Parisian detective, who solves crimes through patience and psychology rather than action. On PBS Masterpiece."},{"id":"b-the-gold-2","type":"show","title":"The Gold — Season 2","service":"BBC","date":"2026-10-18","cadence":"weekly","genres":["British","Crime","Drama"],"note":"Based on the real 1983 Brink's-Mat robbery, this crime drama follows the police pursuit and the underworld laundering £26 million in stolen gold. Season two, on PBS Masterpiece."},{"id":"b-dept-q-2","type":"show","title":"Dept. Q — Season 2","service":"Netflix","date":null,"tbaLabel":"2027","cadence":"binge","genres":["British","Crime","Mystery","Thriller"],"note":"From Scott Frank, an Edinburgh-set crime drama about a prickly detective banished to a basement cold-case unit who can't stop pulling threads. Season two, on Netflix."},{"id":"b-showtrial-2","type":"show","title":"Showtrial — Season 2","service":"BritBox","date":null,"tbaLabel":"Sept 2026","cadence":"weekly","genres":["British","Crime","Drama"],"note":"A twisty British legal thriller that follows a high-profile case from arrest to verdict, keeping you guessing about guilt. Season two, on BritBox."},{"id":"b-sommerdahl","type":"show","title":"The Sommerdahl Murders — new season","service":"BritBox","date":null,"tbaLabel":"Sept 2026","cadence":"weekly","genres":["Murder mystery","Mystery"],"note":"Danish detective Dan Sommerdahl investigates murders in a picturesque seaside town, where work, marriage and friendship keep colliding. On BritBox."},{"id":"b-return-paradise-2","type":"show","title":"Return to Paradise — Season 2","service":"BritBox","date":null,"tbaLabel":"2026","cadence":"weekly","genres":["Mystery","British"],"note":"A spinoff of Death in Paradise: a British detective decamps to sunny coastal Australia and reluctantly solves local murders. Season two, on BritBox."},{"id":"b-good-ship-3","type":"show","title":"The Good Ship Murder — Season 3","service":"BritBox","date":null,"tbaLabel":"2026","cadence":"weekly","genres":["British","Murder mystery","Mystery"],"note":"A cruise-ship entertainer with a knack for detection keeps stumbling onto murders at sea. Season three sets sail, on BritBox."},{"id":"b-inspector-ellis-2","type":"show","title":"Inspector Ellis — Season 2","service":"Acorn TV","date":"2026-07-06","cadence":"weekly","episodes":4,"genres":["British","Crime","Mystery"],"note":"Sharon D. Clarke stars as DCI Ellis, a no-nonsense detective parachuted into troubled cases and hostile stations to get results. Season two, on Acorn TV."},{"id":"b-harry-wild-5","type":"show","title":"Harry Wild — Season 5","service":"Acorn TV","date":"2026-06-08","cadence":"weekly","episodes":6,"genres":["Mystery","British"],"note":"Jane Seymour plays a retired literature professor who muscles into her detective son's cases and turns out to be a natural sleuth. Season five, set in Dublin, on Acorn TV."},{"id":"b-woman-substance","type":"show","title":"A Woman of Substance","service":"BritBox","date":"2026-06-24","endDate":"2026-08-05","cadence":"weekly","genres":["British","Drama"],"note":"A period rags-to-riches saga following a servant girl's rise to build a retail empire, with Brenda Blethyn. On BritBox."},{"id":"b-trigger-point-3","type":"show","title":"Trigger Point — Season 3","service":"BritBox","date":"2026-06-18","endDate":"2026-07-30","cadence":"weekly","genres":["British","Thriller","Drama"],"note":"Vicky McClure stars as a frontline bomb-disposal officer under relentless pressure as a bombing campaign grips London. Season three, on BritBox."},{"id":"b-monster-borden","type":"show","title":"Monster: The Lizzie Borden Story","service":"Netflix","date":"2026-09-17","cadence":"binge","genres":["True crime","Murder mystery","Drama"],"note":"The fourth chapter of Ryan Murphy's true-crime anthology dramatizes Lizzie Borden and the infamous 1892 Fall River axe murders. All at once, on Netflix."},{"id":"s-outlander-bomb-2","type":"show","title":"Outlander: Blood of My Blood — Season 2","service":"Starz","date":"2026-09-18","episodes":10,"cadence":"weekly","genres":["British","Drama"],"note":"A prequel to Outlander tracing the love stories of Jamie's and Claire's parents across two eras of Scottish and English history. A Starz original that streams on Disney+ in Canada; premiere date still tentative."},{"id":"s-the-bear-5","type":"show","title":"The Bear — Season 5","service":"Hulu","date":"2026-06-25","cadence":"binge","genres":["Drama","Comedy"],"note":"The final season of the kitchen drama following chef Carmy and his crew as they chase greatness while wrestling grief and ambition. All episodes at once."},{"id":"s-the-shards","type":"show","title":"The Shards","service":"Hulu","date":"2026-08-05","endDate":"2026-09-09","episodes":9,"cadence":"weekly","genres":["Mystery","Thriller","Horror","Drama"],"note":"Ryan Murphy adapts Bret Easton Ellis's autofiction: in 1980s L.A., a teenage 'Bret' becomes convinced a new classmate is tied to a serial killer stalking the city. Dread-soaked and complete now."},{"id":"s-bad-monkey-2","type":"show","title":"Bad Monkey — Season 2","service":"Apple TV+","date":"2026-12-02","cadence":"weekly","genres":["Mystery","Comedy","Crime"],"note":"Vince Vaughn plays a suspended Florida detective demoted to restaurant inspector who tugs on a case involving a severed arm and a lot of local corruption. A sun-baked mystery-comedy from Bill Lawrence; season two."},{"id":"s-omitb-6","type":"show","title":"Only Murders in the Building — Season 6","service":"Hulu","date":"2026-12-08","episodes":10,"cadence":"weekly","genres":["Murder mystery","Mystery","Comedy"],"note":"Steve Martin, Martin Short and Selena Gomez return as the true-crime-podcasting trio, this time chasing a case that takes them to London. A witty murder mystery."},{"id":"s-death-paradise-16","type":"show","title":"Death in Paradise — Series 16","service":"BBC","date":null,"tbaLabel":"Early 2027","cadence":"weekly","genres":["British","Murder mystery","Mystery"],"note":"Sun, sand and impossible murders: a British detective solves locked-room cases on the fictional Caribbean island of Saint Marie. Series sixteen, on BritBox."},{"id":"s-the-pitt-3","type":"show","title":"The Pitt — Season 3","service":"Max","date":null,"tbaLabel":"Early 2027","cadence":"weekly","genres":["Drama"],"note":"A medical drama that unfolds in real time across a single punishing ER shift, led by Noah Wyle. Season three."},{"id":"s-night-manager-3","type":"show","title":"The Night Manager — Season 3","service":"Prime Video","date":null,"tbaLabel":"Q1 2027","cadence":"weekly","genres":["British","Thriller","Drama"],"note":"Tom Hiddleston returns as Jonathan Pine, the hotel night manager turned spy, in a new le Carré-inspired chapter of international intrigue. On Prime Video."},{"id":"s-starfleet-2","type":"show","title":"Star Trek: Starfleet Academy — Season 2","service":"Paramount+","date":null,"tbaLabel":"Q1 2027","cadence":"weekly","genres":["Sci-fi & fantasy"],"note":"A new generation of cadets trains for Starfleet under looming threats. Season two, on Paramount+."},{"id":"s-last-of-us-3","type":"show","title":"The Last of Us — Season 3","service":"Max","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["Drama","Sci-fi & fantasy"],"note":"The acclaimed game adaptation continues its brutal, tender journey through a fungus-ravaged America. Season three arrives in 2027."},{"id":"s-white-lotus-4","type":"show","title":"The White Lotus — Season 4","service":"Max","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["Drama","Mystery","Comedy"],"note":"Mike White's Emmy-winning anthology checks a new set of wealthy, dysfunctional guests into a luxury resort — where a death is never far off. A fresh cast and locale."},{"id":"s-severance-3","type":"show","title":"Severance — Season 3","service":"Apple TV+","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["Sci-fi & fantasy","Thriller","Mystery"],"note":"At Lumon Industries, employees surgically split their work and personal memories — until the wall between selves starts to crack. Season three of the mind-bending thriller, on Apple TV+."},{"id":"s-euphoria-3","type":"show","title":"Euphoria — Season 3","service":"Max","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["Drama"],"note":"The raw, stylized drama about teens navigating addiction, love and identity returns after a long wait. Season three, led by Zendaya."},{"id":"s-wednesday-3","type":"show","title":"Wednesday — Season 3","service":"Netflix","date":null,"tbaLabel":"2027","cadence":"binge","genres":["Mystery","Comedy","Sci-fi & fantasy"],"note":"Jenna Ortega's deadpan Wednesday Addams returns to Nevermore Academy, where new mysteries and old family secrets await. Season three, on Netflix."},{"id":"s-bridgerton-5","type":"show","title":"Bridgerton — Season 5","service":"Netflix","date":null,"tbaLabel":"2027","cadence":"binge","genres":["British","Drama"],"note":"The lavish Regency romance turns to a new Bridgerton sibling's love story amid balls, scandal and Lady Whistledown's gossip. Season five, on Netflix."},{"id":"s-beyond-paradise-5","type":"show","title":"Beyond Paradise — Series 5","service":"BBC","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["British","Murder mystery","Mystery"],"note":"A spinoff of Death in Paradise: detective Humphrey Goodman solves quirky crimes in a small Devon town while building a life with his fiancée. Season five, on BritBox."},{"id":"s-slow-horses-7","type":"show","title":"Slow Horses — Season 7","service":"Apple TV+","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["British","Thriller","Drama"],"note":"Slough House's misfit spies return for a seventh outing, already commissioned — Jackson Lamb is far from finished. On Apple TV+."},{"id":"s-one-piece-3","type":"show","title":"One Piece — Season 3 (Alabasta)","service":"Netflix","date":null,"tbaLabel":"2027","cadence":"binge","genres":["Action","Sci-fi & fantasy"],"note":"Luffy and the Straw Hats' live-action voyage continues into the Alabasta arc. Season three, on Netflix."},{"id":"s-invincible-5","type":"show","title":"Invincible — Season 5","service":"Prime Video","date":null,"tbaLabel":"2027","cadence":"weekly","genres":["Action","Sci-fi & fantasy"],"note":"The adult animated saga of Mark Grayson, a teen inheriting earth-shaking powers and a dark family legacy. Season five, on Prime Video."},{"id":"s-assassins-creed","type":"show","title":"Assassin's Creed","service":"Netflix","date":null,"tbaLabel":"2027","cadence":"binge","genres":["Action","Sci-fi & fantasy"],"note":"A live-action series inspired by the games, weaving between a present-day conflict and historical Assassin ancestors. On Netflix."},{"id":"m-thursday-murder","type":"movie","title":"The Thursday Murder Club","service":"Netflix","date":"2025-08-28","genres":["Murder mystery","British","Comedy"],"note":"Four residents of a retirement village who meet to solve cold cases land in the middle of a real murder. Helen Mirren, Pierce Brosnan and Ben Kingsley lead this cosy Richard Osman adaptation, on Netflix."},{"id":"m-knives-out-3","type":"movie","title":"Wake Up Dead Man: A Knives Out Mystery","service":"Netflix","date":"2025-12-12","genres":["Murder mystery","Mystery","Comedy"],"note":"Detective Benoit Blanc (Daniel Craig) returns for his most dangerous case yet, a fresh stand-alone whodunit from Rian Johnson. On Netflix."},{"id":"m-mandalorian-grogu","type":"movie","title":"The Mandalorian & Grogu","service":"Disney+","date":"2026-09-02","genres":["Sci-fi & fantasy","Action"],"note":"The Mandalorian and his pint-sized companion Grogu take their bond to the big screen in the first Star Wars feature in years. Now on Disney+."},{"id":"m-the-runner","type":"movie","title":"The Runner","service":"Prime Video","date":"2026-09-02","genres":["Thriller","Action"],"note":"A new action-thriller, streaming on Prime Video."},{"id":"m-mayday","type":"movie","title":"Mayday","service":"Apple TV+","date":"2026-09-04","genres":["Action","Comedy"],"note":"An action-comedy film, new on Apple TV+."},{"id":"m-backrooms","type":"movie","title":"Backrooms","service":"Max","date":"2026-09-25","genres":["Horror"],"note":"The viral internet horror phenomenon — endless yellowed hallways where something is always just behind you — gets a feature film."},{"id":"m-dune-3","type":"movie","title":"Dune: Part Three","service":"In theatres","date":"2026-12-18","genres":["Sci-fi & fantasy"],"note":"The final chapter of Denis Villeneuve's Dune saga arrives in theatres, concluding Paul Atreides's story."},{"id":"m-avengers-doomsday","type":"movie","title":"Avengers: Doomsday","service":"In theatres","date":"2026-12-18","genres":["Action","Sci-fi & fantasy"],"note":"Marvel's sprawling team-up brings the heroes together against a world-ending threat, in theatres."},{"id":"s-presumed-innocent","type":"show","title":"Presumed Innocent","service":"Apple TV+","date":"2024-06-12","cadence":"binge","genres":["Thriller","Crime","Mystery","Drama"],"note":"Jake Gyllenhaal as a prosecutor accused of murdering a colleague, in a twisty legal thriller."},{"id":"s-sugar","type":"show","title":"Sugar","service":"Apple TV+","date":"2024-04-05","cadence":"binge","genres":["Mystery","Crime","Drama"],"note":"Colin Farrell as a private detective with an old-Hollywood streak and a strange secret, hunting a missing woman in LA."},{"id":"s-bad-sisters","type":"show","title":"Bad Sisters","service":"Apple TV+","date":"2022-08-19","cadence":"binge","genres":["Comedy","Thriller","Mystery","Drama"],"note":"Sharon Horgan's darkly funny Irish thriller about five devoted sisters and the very deserved death of one's husband."},{"id":"s-smoke","type":"show","title":"Smoke","service":"Apple TV+","date":"2025-06-27","cadence":"binge","genres":["Thriller","Crime","Drama"],"note":"Taron Egerton as an arson investigator chasing two serial firestarters, from Dennis Lehane."},{"id":"s-your-friends-neighbors","type":"show","title":"Your Friends & Neighbors","service":"Apple TV+","date":"2025-04-11","cadence":"binge","genres":["Crime","Drama","Mystery","Thriller"],"note":"Jon Hamm as a fired hedge-fund manager who starts quietly robbing his wealthy neighbours."},{"id":"s-morning-show","type":"show","title":"The Morning Show","service":"Apple TV+","date":"2025-09-17","cadence":"binge","genres":["Drama"],"note":"Scandals, affairs and conspiracies behind the scenes of a network morning show (Season 4)."},{"id":"s-foundation","type":"show","title":"Foundation","service":"Apple TV+","date":"2025-07-11","cadence":"binge","genres":["Sci-fi & fantasy"],"note":"Isaac Asimov's galaxy-spanning saga of a mathematician who predicts the fall of an empire (Season 3)."},{"id":"s-down-cemetery-road","type":"show","title":"Down Cemetery Road","service":"Apple TV+","date":"2025-10-29","cadence":"binge","genres":["Mystery","Thriller"],"note":"Emma Thompson and Ruth Wilson are pulled into a deadly conspiracy after a house explodes, from the author of Slow Horses."},{"id":"s-pluribus","type":"show","title":"Pluribus","service":"Apple TV+","date":"2025-11-07","cadence":"binge","genres":["Sci-fi & fantasy","Mystery"],"note":"From Vince Gilligan, Rhea Seehorn stars in a mysterious sci-fi drama kept tightly under wraps."},{"id":"s-the-residence","type":"show","title":"The Residence","service":"Netflix","date":"2025-03-20","cadence":"binge","genres":["Murder mystery","Mystery","Comedy"],"note":"Uzo Aduba as an eccentric, birdwatching detective solving a murder inside the White House, from Shonda Rhimes."},{"id":"s-beast-in-me","type":"show","title":"The Beast in Me","service":"Netflix","date":"2025-11-13","cadence":"binge","genres":["Thriller","Mystery","Drama"],"note":"Claire Danes as a grieving novelist convinced her new neighbour (Matthew Rhys) got away with murder."},{"id":"s-untamed","type":"show","title":"Untamed","service":"Netflix","date":"2025-07-17","cadence":"binge","genres":["Mystery","Crime","Thriller"],"note":"Eric Bana as a National Park Service agent investigating a death in the wilds of Yosemite."},{"id":"s-better-sister","type":"show","title":"The Better Sister","service":"Prime Video","date":"2025-05-29","cadence":"binge","genres":["Mystery","Thriller","Drama"],"note":"Jessica Biel and Elizabeth Banks as estranged sisters bound together when one's husband is murdered."},{"id":"s-all-her-fault","type":"show","title":"All Her Fault","service":"Peacock","date":"2025-11-06","cadence":"binge","genres":["Thriller","Mystery","Drama"],"note":"A mother arrives for a playdate pickup to find her son was never there, in this twisty abduction mystery."},{"id":"s-poker-face","type":"show","title":"Poker Face","service":"Peacock","date":"2025-05-08","cadence":"binge","genres":["Mystery","Crime","Comedy"],"note":"Natasha Lyonne's human lie-detector solves a fresh murder in every episode, Columbo-style (Season 2)."},{"id":"s-under-the-bridge","type":"show","title":"Under the Bridge","service":"Hulu","date":"2024-04-17","cadence":"binge","genres":["True crime","Mystery","Drama"],"note":"Lily Gladstone and Riley Keough in the true story of the murder of teenager Reena Virk."},{"id":"s-adolescence","type":"show","title":"Adolescence","service":"Netflix","date":"2025-03-13","cadence":"binge","genres":["Crime","Drama","Mystery"],"note":"A family is shattered when a 13-year-old is arrested for murder, each episode filmed in a single take."},{"id":"s-murder-end-world","type":"show","title":"A Murder at the End of the World","service":"Hulu","date":"2023-11-14","cadence":"binge","genres":["Mystery","Thriller"],"note":"A Gen-Z amateur sleuth investigates a death at a reclusive billionaire's remote retreat."},{"id":"b-ludwig","type":"show","title":"Ludwig","service":"BBC","date":"2024-09-25","cadence":"binge","genres":["British","Murder mystery","Mystery","Comedy"],"note":"David Mitchell as a reclusive puzzle-setter impersonating his missing detective twin to crack cases."},{"id":"b-sherwood","type":"show","title":"Sherwood","service":"BBC","date":"2022-06-13","cadence":"binge","genres":["British","Crime","Drama","Mystery"],"note":"Real-events-inspired killings reopen old wounds in a former Nottinghamshire mining town."},{"id":"b-blue-lights","type":"show","title":"Blue Lights","service":"BBC","date":"2023-03-27","cadence":"binge","genres":["British","Crime","Drama"],"note":"Rookie police officers navigate the tense, complicated streets of present-day Belfast."},{"id":"b-towards-zero","type":"show","title":"Towards Zero","service":"BBC","date":"2025-03-02","cadence":"binge","genres":["British","Murder mystery","Mystery"],"note":"An Agatha Christie adaptation with Anjelica Huston, where a tense house party turns deadly."},{"id":"b-seven-dials","type":"show","title":"The Seven Dials Mystery","service":"BBC","date":null,"tbaLabel":"2026","cadence":"binge","genres":["British","Murder mystery","Mystery"],"note":"Agatha Christie's country-house puzzle, adapted by Chris Chibnall with Mia McKenna-Bruce and Martin Freeman."},{"id":"b-wolf-hall-2","type":"show","title":"Wolf Hall: The Mirror and the Light","service":"BBC","date":"2024-11-10","cadence":"binge","genres":["British","Drama"],"note":"Mark Rylance returns as Thomas Cromwell in the final chapter of his rise and fall under Henry VIII."},{"id":"b-rebus","type":"show","title":"Rebus","service":"BBC","date":"2024-05-17","cadence":"binge","genres":["British","Crime","Mystery","Drama"],"note":"A gritty modern reinvention of Ian Rankin's Edinburgh detective John Rebus."},{"id":"s-missing-you","type":"show","title":"Missing You","service":"Netflix","date":"2025-01-01","cadence":"binge","genres":["British","Crime","Mystery","Thriller"],"note":"A Harlan Coben adaptation: a detective's long-missing fiancé resurfaces on a dating app years later."},{"id":"m-road-house","type":"movie","title":"Road House","service":"Prime Video","date":"2024-03-21","genres":["Action","Thriller"],"note":"Jake Gyllenhaal as an ex-UFC fighter turned bouncer at a rowdy Florida Keys roadhouse."},{"id":"m-idea-of-you","type":"movie","title":"The Idea of You","service":"Prime Video","date":"2024-05-02","genres":["Drama","Comedy"],"note":"Anne Hathaway as a single mom who unexpectedly falls for the lead singer of a boy band."},{"id":"m-g20","type":"movie","title":"G20","service":"Prime Video","date":"2025-04-10","genres":["Action","Thriller"],"note":"Viola Davis as a US president who fights back when terrorists seize a global summit."},{"id":"m-deep-cover","type":"movie","title":"Deep Cover","service":"Prime Video","date":"2025-06-12","genres":["Comedy","Action"],"note":"Improv actors are recruited to pose as criminals and quickly get in over their heads."},{"id":"m-heads-of-state","type":"movie","title":"Heads of State","service":"Prime Video","date":"2025-07-02","genres":["Action","Comedy"],"note":"Idris Elba and John Cena as rival world leaders forced to team up when their plane goes down."}];
+
+var SERVICE_NAMES = Object.keys(SERVICES);
+var GENRE_FILTERS = ["British","Mystery","Murder mystery","Drama","Crime","Comedy","Sci-fi & fantasy"];
+var ALL_GENRES = GENRE_FILTERS.concat(["Thriller","Action","Horror","True crime"]);
+var CADENCE = { weekly:{pill:"Weekly"}, binge:{pill:"All at once"}, tba:{pill:"Style TBA"} };
+function serviceColor(s){ return SERVICES[s] || "#8A7C96"; }
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); }
+function parseDate(iso){ return new Date(iso+"T00:00:00"); }
+function fmtDate(iso){ return parseDate(iso).toLocaleDateString("en-CA",{weekday:"short",month:"short",day:"numeric",year:"numeric"}); }
+function fmtShort(iso){ return parseDate(iso).toLocaleDateString("en-CA",{month:"short",day:"numeric"}); }
+function monthLabel(iso){ return parseDate(iso).toLocaleDateString("en-CA",{month:"long",year:"numeric"}); }
+function daysUntil(iso){ var n=new Date(); var t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()); return Math.round((parseDate(iso)-t0)/86400000); }
+function relLabel(iso){ var d=daysUntil(iso); if(d<0)return "Streaming now"; if(d===0)return "Today"; if(d===1)return "Tomorrow"; if(d<=21)return "In "+d+" days"; return null; }
+function addWeeks(iso,n){ var d=parseDate(iso); d.setDate(d.getDate()+n*7); return d.toISOString().slice(0,10); }
+function finaleOf(s){ if(s.cadence!=="weekly"||!s.date)return null; if(s.endDate)return {iso:s.endDate,est:false}; var eps=s.episodes||DEFAULT_EPISODES[s.service]||8; return {iso:addWeeks(s.date,eps-1),est:true}; }
+function statusOf(s){
+  var type=s.type||"show";
+  if(type==="movie"){ if(s.service==="In theatres")return {t:"In theatres — not streaming yet",done:false}; if(s.date&&daysUntil(s.date)<=0)return {t:"Streaming now",done:true}; return {t:"Coming to "+s.service,done:false}; }
+  if(s.cadence==="binge"){ if(s.date&&daysUntil(s.date)<=0)return {t:"All episodes available now",done:true}; return {t:"Every episode drops on release day",done:false}; }
+  if(s.cadence==="weekly"){
+    var f=finaleOf(s);
+    if(f){ var done=daysUntil(f.iso)<=0; var when=fmtShort(f.iso);
+      if(f.est)return done?{t:"Likely wrapped ~"+when+" — safe to binge (est.)",done:true}:{t:"Est. finale ~"+when+" — wait to binge",done:false};
+      return done?{t:"Complete — you can binge it all now",done:true}:{t:"Full season by "+when+" — wait to binge",done:false};
+    }
+    if(s.date&&daysUntil(s.date)<=0)return {t:"Airing weekly now — finale date TBA",done:false};
+    return {t:"Weekly — finale lands once it starts",done:false};
+  }
+  return {t:"Release style not announced",done:false};
+}
+function monthName(iso){ return parseDate(iso).toLocaleDateString("en-CA",{month:"long"}); }
+function tbaWeight(label){
+  var m=label.match(/20\d\d/); var y=m?Number(m[0]):9999; var base=y*100; var l=label.toLowerCase();
+  if(l.indexOf("early")>=0||l.indexOf("q1")>=0||l.indexOf("winter")>=0)return base+0;
+  if(l.indexOf("spring")>=0)return base+3;
+  if(l.indexOf("summer")>=0)return base+6;
+  if(l.indexOf("fall")>=0||l.indexOf("autumn")>=0||l.indexOf("late")>=0)return base+90;
+  return base+95;
+}
+function groupByMonth(items){
+  var map={};
+  items.forEach(function(s){
+    if(s.date){ var k=s.date.slice(0,7); if(!map[k])map[k]={sub:monthName(s.date),band:s.date.slice(0,4),items:[],sort:Number(k.replace("-",""))}; map[k].items.push(s); }
+    else { var lbl=s.tbaLabel||"Date to be announced"; var kk="tba:"+lbl; var m=lbl.match(/20\d\d/); var band=m?m[0]:"To be announced"; if(!map[kk])map[kk]={sub:(lbl===band?null:lbl),band:band,items:[],sort:tbaWeight(lbl)}; map[kk].items.push(s); }
+  });
+  var out=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.sort-b.sort;});
+  out.forEach(function(g){ g.items.sort(function(a,b){ return (a.date&&b.date)?a.date.localeCompare(b.date):a.title.localeCompare(b.title); }); });
+  return out;
+}
+function hl(text){ var t=esc(text); if(!S.query)return t; var q=S.query.trim(); if(!q)return t; try{ var re=new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"); return t.replace(re,"<span class='wl-mark'>$1</span>"); }catch(e){ return t; } }
+function groupByService(items){
+  var map={};
+  items.forEach(function(s){ var k=s.service||"Other"; if(!map[k])map[k]={label:k,items:[],service:k,sort:SERVICE_NAMES.indexOf(k)}; map[k].items.push(s); });
+  var groups=Object.keys(map).map(function(k){return map[k];});
+  groups.forEach(function(g){ if(g.sort<0)g.sort=999; });
+  groups.sort(function(a,b){ return a.sort-b.sort || a.label.localeCompare(b.label); });
+  groups.forEach(function(g){ g.items.sort(function(a,b){ if(a.date&&b.date)return a.date.localeCompare(b.date); if(a.date)return -1; if(b.date)return 1; return a.title.localeCompare(b.title); }); });
+  return groups;
+}
+function trailerFor(s){ return (s.trailer&&s.trailer.trim())?s.trailer.trim():"https://www.youtube.com/results?search_query="+encodeURIComponent(s.title.replace(/—.*/,"").trim()+" trailer"); }
+
+var IP={
+  plus:"<line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/>",
+  play:"<polygon points='6 3 20 12 6 21 6 3'/>",
+  trash:"<polyline points='3 6 5 6 21 6'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>",
+  pencil:"<path d='M12 20h9'/><path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/>",
+  x:"<line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/>",
+  check:"<polyline points='20 6 9 17 4 12'/>",
+  clock:"<circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/>",
+  rotate:"<polyline points='1 4 1 10 7 10'/><path d='M3.51 15a9 9 0 1 0 2.13-9.36L1 10'/>",
+  tv:"<rect x='2' y='7' width='20' height='15' rx='2'/><polyline points='17 2 12 7 7 2'/>",
+  film:"<rect x='2' y='2' width='20' height='20' rx='2'/><line x1='7' y1='2' x2='7' y2='22'/><line x1='17' y1='2' x2='17' y2='22'/><line x1='2' y1='12' x2='22' y2='12'/>",
+  search:"<circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/>"
+};
+function icon(n,sz){ var fill=(n==="play")?"currentColor":"none"; var stroke=(n==="play")?"none":"currentColor";
+  return "<svg viewBox='0 0 24 24' width='"+sz+"' height='"+sz+"' fill='"+fill+"' stroke='"+stroke+"' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='vertical-align:middle;flex:0 0 auto'>"+IP[n]+"</svg>"; }
+
+var KEY="watchlist_v1";
+var S={ tab:"list", kind:"show", genre:"All", query:"", groupBy:"month", newIds:new Set(), list:[], edit:null, confirm:null };
+var ES=null;
+var canStore=true;
+var SEEN_KEY="seen_ids_v1";
+var seenIds=new Set();
+var haveSeen=false;
+function persistSeen(){ try{ localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(seenIds))); }catch(e){} }
+function markCatalogueNew(){ CATALOGUE.forEach(function(c){ if(!seenIds.has(c.id)) S.newIds.add(c.id); }); }
+function markSeenAll(){ CATALOGUE.forEach(function(c){ seenIds.add(c.id); }); persistSeen(); }
+function unseenCount(){ var n=0; CATALOGUE.forEach(function(c){ if(!seenIds.has(c.id))n++; }); return n; }
+function newBadge(s){ return (S.newIds&&S.newIds.has(s.id))?" <span class='wl-new'>New</span>":""; }
+function normalizeItems(arr){ if(!arr||!arr.map)return arr; return arr.map(function(c){ if(!c||typeof c!=="object")return c; var m={}; for(var k in c){ m[k]=c[k]; } if(m.date==null&&m.startDate!=null)m.date=m.startDate; if(m.endDate==null&&m.finaleDate!=null)m.endDate=m.finaleDate; return m; }); }
+function defaultList(){ return CATALOGUE.filter(function(c){return c.starter;}).map(function(c){ var r={}; for(var k in c){ if(k!=="starter")r[k]=c[k]; } return r; }); }
+function hydrateList(){
+  var byId={}; CATALOGUE.forEach(function(c){byId[c.id]=c;});
+  S.list=S.list.map(function(x){ var c=byId[x.id]; if(c){ var m={}; for(var k in c){ if(k!=="starter")m[k]=c[k]; } m.watched=x.watched; return m; } return x; });
+}
+function load(){
+  try{ if(localStorage.getItem("app_version")!=="2"){ localStorage.removeItem(KEY); localStorage.setItem("app_version","2"); } }catch(e){}
+  try{ var sv=localStorage.getItem(SEEN_KEY); if(sv){ seenIds=new Set(JSON.parse(sv)); haveSeen=true; } }catch(e){}
+  try{ var cc=localStorage.getItem("catalogue_cache"); if(cc){ var arr=JSON.parse(cc); if(arr&&arr.length)CATALOGUE=normalizeItems(arr); } }catch(e){}
+  try{ var raw=localStorage.getItem(KEY); if(raw){ S.list=JSON.parse(raw); hydrateList(); } else { S.list=[]; save(); } }
+  catch(e){ canStore=false; S.list=[]; }
+  if(!haveSeen){ markSeenAll(); haveSeen=true; } else { markCatalogueNew(); }
+}
+function applyCatalogue(items){ CATALOGUE=normalizeItems(items); try{ hydrateList(); save(); markCatalogueNew(); }catch(e){} }
+function fetchRemote(){
+  if(typeof fetch!=="function")return;
+  if(typeof location==="undefined"||!/^https?:/.test(location.href||""))return;
+  try{
+    fetch("catalogue.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(d&&d.items&&d.items.length){ try{localStorage.setItem("catalogue_cache",JSON.stringify(d.items));}catch(e){} applyCatalogue(d.items); render(); }
+    }).catch(function(){});
+  }catch(e){}
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S.list)); }catch(e){ canStore=false; } }
+function persist(){ save(); render(); }
+function inList(id){ return S.list.some(function(x){return x.id===id;}); }
+function byId(arr,id){ for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i]; return null; }
+
+function metaHTML(s,withTags){
+  var c=serviceColor(s.service); var rel=s.date?relLabel(s.date):null; var isMovie=(s.type||"show")==="movie"; var cad=CADENCE[s.cadence]; var st=statusOf(s);
+  return "<div class='wl-meta'>"+
+    "<span class='wl-date'>"+icon("clock",16)+(s.date?fmtDate(s.date):esc(s.tbaLabel||"TBA"))+"</span>"+
+    (rel?"<span class='wl-rel'>"+rel+"</span>":"")+
+    ((!isMovie&&cad)?"<span class='wl-cad'>"+cad.pill+"</span>":"")+
+    (S.groupBy==="service"?"":"<span class='wl-svc'><span class='wl-dot' style='background:"+c+"'></span>"+esc(s.service)+"</span>")+
+  "</div>"+
+  (s.watched?"<p class='wl-status done'>"+icon("check",15)+"Watched</p>":"<p class='wl-status"+(st.done?" done":"")+"'>"+(st.done?icon("check",15):icon("clock",15))+esc(st.t)+"</p>")+
+  (s.note?"<p class='wl-desc'>"+esc(s.note)+"</p>":"")+
+  ((withTags&&s.genres)?"<div class='wl-tags'>"+s.genres.map(function(g){return "<span class='wl-tag'>"+esc(g)+"</span>";}).join("")+"</div>":"");
+}
+function listRowHTML(s){
+  var confirming=S.confirm===s.id;
+  var body="<h3 class='wl-name'>"+hl(s.title)+newBadge(s)+"</h3>"+(confirming?
+    ("<div class='wl-confirm'><span>Remove <strong>"+esc(s.title)+"</strong>?</span>"+
+     "<button class='wl-danger' data-act='remove' data-id='"+s.id+"'>"+icon("check",16)+" Yes, remove</button>"+
+     "<button class='wl-ghost sm' data-act='cancel-remove'>Keep it</button></div>")
+    : metaHTML(s,false));
+  var actions=confirming?"":("<div class='wl-actions'>"+
+    "<button class='wl-check"+(s.watched?" on":"")+"' data-act='toggle-watched' data-id='"+s.id+"' aria-label='"+(s.watched?"Mark as not watched":"Mark as watched")+"'>"+icon("check",18)+"</button>"+
+    "<a class='wl-trailer' href='"+esc(trailerFor(s))+"' target='_blank' rel='noopener noreferrer'>"+icon("play",17)+" Trailer</a>"+
+    "<button class='wl-icon' data-act='edit' data-id='"+s.id+"' aria-label='Edit'>"+icon("pencil",18)+"</button>"+
+    "<button class='wl-icon' data-act='ask-remove' data-id='"+s.id+"' aria-label='Remove'>"+icon("trash",18)+"</button></div>");
+  return "<li class='wl-row'><span class='wl-spine' style='background:"+serviceColor(s.service)+"'></span><div class='wl-body'>"+body+"</div>"+actions+"</li>";
+}
+function browseRowHTML(s){
+  var added=inList(s.id);
+  return "<li class='wl-row'><span class='wl-spine' style='background:"+serviceColor(s.service)+"'></span>"+
+    "<div class='wl-body'><h3 class='wl-name'>"+hl(s.title)+newBadge(s)+"</h3>"+metaHTML(s,true)+"</div>"+
+    "<div class='wl-actions'>"+
+    "<a class='wl-trailer' href='"+esc(trailerFor(s))+"' target='_blank' rel='noopener noreferrer'>"+icon("play",17)+" Trailer</a>"+
+    "<button class='wl-addbtn"+(added?" on":"")+"' data-act='toggle-cat' data-id='"+s.id+"'>"+(added?icon("check",17)+" Added":icon("plus",17)+" Add")+"</button>"+
+    "</div></li>";
+}
+function headerHTML(){
+  return "<header class='wl-head'><div class='wl-head-inner'>"+
+    "<div><h1 class='wl-title'>The Watchlist</h1>"+
+    "<div class='wl-marquee'><i></i><i></i><i></i><i></i><i></i><i></i></div>"+
+    "<p class='wl-sub'>What's coming to streaming — when it lands, where to watch, and whether it's finished airing yet.</p></div>"+
+    "<button class='wl-add' data-act='add'>"+icon("plus",22)+" Add a show</button>"+
+    "</div></header>";
+}
+function mainHTML(){
+  var h="<main class='wl-main'>";
+  h+="<div class='wl-tabs'><button class='wl-tab"+(S.tab==="list"?" on":"")+"' data-act='tab' data-tab='list'>My list</button>"+
+     "<button class='wl-tab"+(S.tab==="watched"?" on":"")+"' data-act='tab' data-tab='watched'>Watched</button>"+
+     "<button class='wl-tab"+(S.tab==="browse"?" on":"")+"' data-act='tab' data-tab='browse'>Browse"+(unseenCount()>0?"<span class='wl-tabdot'>"+unseenCount()+"</span>":"")+"</button></div>";
+  h+="<div class='wl-kind'><button class='wl-seg-btn"+(S.kind==="show"?" on":"")+"' data-act='kind' data-kind='show'>"+icon("tv",16)+" Shows</button>"+
+     "<button class='wl-seg-btn"+(S.kind==="movie"?" on":"")+"' data-act='kind' data-kind='movie'>"+icon("film",16)+" Movies</button></div>";
+  if(S.tab==="browse"){
+    h+="<div class='wl-filters'><button class='wl-chip"+(S.genre==="All"?" on":"")+"' data-act='genre' data-genre='All'>All</button>";
+    GENRE_FILTERS.forEach(function(g){ h+="<button class='wl-chip"+(S.genre===g?" on":"")+"' data-act='genre' data-genre='"+esc(g)+"'>"+esc(g)+"</button>"; });
+    h+="</div>";
+    var added=CATALOGUE.filter(function(c){return inList(c.id);}).length;
+    h+="<p class='wl-browsehint'>Tap <strong>Add</strong> on anything you want on the list. "+added+" of "+CATALOGUE.length+" added so far.</p>";
+  }
+  h+="<div class='wl-controls'>"+
+     "<div class='wl-search'>"+icon("search",18)+"<input id='wl-search' type='search' placeholder='Search titles\u2026' value='"+esc(S.query)+"' autocomplete='off'></div>"+
+     "<div class='wl-groupby'>"+
+       "<button class='wl-seg-btn"+(S.groupBy==="month"?" on":"")+"' data-act='group' data-group='month'>Month</button>"+
+       "<button class='wl-seg-btn"+(S.groupBy==="service"?" on":"")+"' data-act='group' data-group='service'>Platform</button>"+
+     "</div></div>";
+  h+="<div id='wl-results'></div>";
+  if(S.tab==="list" && S.list.length>0){
+    h+="<footer class='wl-foot'><p class='wl-note'>"+(canStore?"Your list is saved right here on this device.":"Heads up: this browser is blocking storage, so changes won't be remembered.")+"</p></footer>";
+  }
+  h+="</main>";
+  return h;
+}
+function currentItems(){
+  var items;
+  if(S.tab==="browse") items = CATALOGUE.filter(function(x){return (x.type||"show")===S.kind && (S.genre==="All"||(x.genres||[]).indexOf(S.genre)>=0);});
+  else items = S.list.filter(function(x){return (x.type||"show")===S.kind && (S.tab==="watched"?x.watched:!x.watched);});
+  if(S.query){ var q=S.query.toLowerCase(); items=items.filter(function(x){ return x.title.toLowerCase().indexOf(q)>=0 || (x.note&&x.note.toLowerCase().indexOf(q)>=0) || (x.service&&x.service.toLowerCase().indexOf(q)>=0); }); }
+  return items;
+}
+function resultsHTML(){
+  var items=currentItems();
+  var groups = S.groupBy==="service"?groupByService(items):groupByMonth(items);
+  if(groups.length===0){
+    var noun=S.kind==="movie"?"movies":"shows";
+    var eTitle,eBody,eActions;
+    if(S.query){ eTitle="No matches for \u201C"+esc(S.query)+"\u201D"; eBody="Try a different search, or clear it."; eActions=""; }
+    else if(S.tab==="browse"){ eTitle="No "+noun+" match that filter"; eBody="Try another genre above."; eActions=""; }
+    else if(S.tab==="watched"){ eTitle="No watched "+noun+" yet"; eBody="Tap the round \u2713 on anything in your list and it'll move here."; eActions=""; }
+    else { eTitle=(S.kind==="movie"?"No movies yet":"Your list is empty"); eBody="Head to Browse to find "+noun+" and tap Add — they'll show up here."; eActions="<button class='wl-add' data-act='tab' data-tab='browse'>"+icon("search",18)+" Browse "+noun+"</button><button class='wl-ghost' data-act='add'>"+icon("plus",18)+" Add manually</button>"; }
+    return "<div class='wl-empty-card'><p class='wl-empty-title'>"+eTitle+"</p><p class='wl-empty-body'>"+eBody+"</p>"+(eActions?"<div class='wl-empty-actions'>"+eActions+"</div>":"")+"</div>";
+  }
+  var out="";
+  if(S.groupBy==="service"){
+    groups.forEach(function(g){
+      out+="<section class='wl-group'><div class='wl-pband' style='background:"+serviceColor(g.service)+"'>"+esc(g.label)+"<span class='wl-pc'>"+g.items.length+"</span></div><ul class='wl-list'>";
+      g.items.forEach(function(s){ out+= S.tab==="browse"?browseRowHTML(s):listRowHTML(s); });
+      out+="</ul></section>";
+    });
+  } else {
+    var lastBand=null;
+    groups.forEach(function(g){
+      if(g.band && g.band!==lastBand){ out+="<div class='wl-year'>"+esc(g.band)+"</div>"; lastBand=g.band; }
+      out+="<section class='wl-group'><div class='wl-month'><h2>"+esc(g.sub||"Date to be announced")+"</h2><span class='wl-count'>"+g.items.length+"</span></div><ul class='wl-list'>";
+      g.items.forEach(function(s){ out+= S.tab==="browse"?browseRowHTML(s):listRowHTML(s); });
+      out+="</ul></section>";
+    });
+  }
+  return out;
+}
+function fillResults(){ var el=document.getElementById("wl-results"); if(el) el.innerHTML=resultsHTML(); }
+function modalHTML(){
+  var e=ES;
+  var svcOpts=SERVICE_NAMES.map(function(n){return "<option"+(e.service===n?" selected":"")+">"+esc(n)+"</option>";}).join("")+"<option value='Other'"+(e.service==="Other"?" selected":"")+">Other…</option>";
+  var h="<div class='wl-overlay'><div class='wl-modal'>";
+  h+="<div class='wl-modal-head'><h2>"+(e.id?"Edit":"Add")+" "+(e.type==="movie"?"a movie":"a show")+"</h2><button class='wl-icon' data-act='close' aria-label='Close'>"+icon("x",22)+"</button></div>";
+  h+="<div class='wl-form'>";
+  h+="<div class='wl-field'><span>Type</span><div class='wl-seg'>"+
+     "<button class='wl-seg-btn"+(e.type==="show"?" on":"")+"' data-act='m-type' data-type='show'>"+icon("tv",16)+" Show</button>"+
+     "<button class='wl-seg-btn"+(e.type==="movie"?" on":"")+"' data-act='m-type' data-type='movie'>"+icon("film",16)+" Movie</button></div></div>";
+  h+="<div class='wl-field'><span>Name</span><input id='f-title' value='"+esc(e.title)+"' placeholder='"+(e.type==="movie"?"e.g. The Thursday Murder Club":"e.g. Professor T")+"'></div>";
+  h+="<div class='wl-field'><span>Where to watch</span><select id='f-service'>"+svcOpts+"</select></div>";
+  if(e.service==="Other")h+="<div class='wl-field'><span>Service name</span><input id='f-other' value='"+esc(e.otherSvc)+"' placeholder='Type the service'></div>";
+  h+="<div class='wl-field'><span>"+(e.type==="movie"?"Release date":"Premiere date")+"</span>"+
+     (e.tba?"<input id='f-tbaLabel' value='"+esc(e.tbaLabel)+"' placeholder='e.g. Fall 2026'>":"<input id='f-date' type='date' value='"+esc(e.date)+"'>")+
+     "<button class='wl-toggle"+(e.tba?" on":"")+"' data-act='m-tba'><span class='wl-toggle-box'>"+(e.tba?icon("check",14):"")+"</span>Date not announced yet</button></div>";
+  if(e.type==="show"){
+    h+="<div class='wl-field'><span>How it drops</span><div class='wl-seg'>"+
+       ["binge","weekly","tba"].map(function(k){return "<button class='wl-seg-btn"+(e.cadence===k?" on":"")+"' data-act='m-cad' data-cad='"+k+"'>"+CADENCE[k].pill+"</button>";}).join("")+"</div></div>";
+    if(e.cadence==="weekly")h+="<div class='wl-field'><span>Number of episodes <em>(optional — used to estimate the finale)</em></span><input id='f-episodes' type='number' min='1' value='"+esc(e.episodes)+"' placeholder='e.g. 8'></div>";
+    if(e.cadence==="weekly"&&!e.tba)h+="<div class='wl-field'><span>Finale date <em>(optional — overrides the estimate)</em></span><input id='f-endDate' type='date' value='"+esc(e.endDate)+"'></div>";
+  }
+  h+="<div class='wl-field'><span>Genres <em>(optional)</em></span><div class='wl-genres'>"+
+     ALL_GENRES.map(function(g){return "<button class='wl-chip sm"+(e.genres.indexOf(g)>=0?" on":"")+"' data-act='m-genre' data-genre='"+esc(g)+"'>"+esc(g)+"</button>";}).join("")+"</div></div>";
+  h+="<div class='wl-field'><span>Trailer link <em>(optional)</em></span><input id='f-trailer' value='"+esc(e.trailer)+"' placeholder='Leave blank to search YouTube automatically'></div>";
+  h+="<div class='wl-field'><span>Note <em>(optional)</em></span><input id='f-note' value='"+esc(e.note)+"' placeholder='e.g. cast, or why you want to watch'></div>";
+  if(e.err)h+="<p class='wl-err'>"+esc(e.err)+"</p>";
+  h+="</div>";
+  h+="<div class='wl-modal-foot'><button class='wl-ghost' data-act='close'>Cancel</button><button class='wl-add' data-act='save'>"+(e.id?"Save changes":"Add to list")+"</button></div>";
+  h+="</div></div>";
+  return h;
+}
+function render(){ document.getElementById("app").innerHTML=headerHTML()+mainHTML()+(S.edit?modalHTML():""); fillResults(); }
+
+function openEditor(item){
+  if(item){
+    var known=SERVICE_NAMES.indexOf(item.service)>=0;
+    ES={ id:item.id, type:item.type||"show", title:item.title||"", service:known?item.service:"Other", otherSvc:known?"":item.service,
+      tba:!item.date, date:item.date||"", tbaLabel:item.tbaLabel||"2026", cadence:item.cadence||"binge",
+      episodes:item.episodes||"", endDate:item.endDate||"", genres:(item.genres||[]).slice(), trailer:item.trailer||"", note:item.note||"", err:"" };
+  } else {
+    ES={ id:null, type:"show", title:"", service:"Netflix", otherSvc:"", tba:false, date:"", tbaLabel:"2026", cadence:"binge",
+      episodes:"", endDate:"", genres:[], trailer:"", note:"", err:"" };
+  }
+}
+function readInputs(){
+  if(!S.edit)return; var g=function(id){return document.getElementById(id);};
+  if(g("f-title"))ES.title=g("f-title").value;
+  if(g("f-service"))ES.service=g("f-service").value;
+  if(g("f-other"))ES.otherSvc=g("f-other").value;
+  if(g("f-date"))ES.date=g("f-date").value;
+  if(g("f-tbaLabel"))ES.tbaLabel=g("f-tbaLabel").value;
+  if(g("f-episodes"))ES.episodes=g("f-episodes").value;
+  if(g("f-endDate"))ES.endDate=g("f-endDate").value;
+  if(g("f-trailer"))ES.trailer=g("f-trailer").value;
+  if(g("f-note"))ES.note=g("f-note").value;
+}
+function saveEditor(){
+  readInputs();
+  var svc=ES.service==="Other"?ES.otherSvc.trim():ES.service;
+  if(!ES.title.trim()){ES.err="Give it a name.";render();return;}
+  if(!svc){ES.err="Choose where to watch.";render();return;}
+  if(!ES.tba&&!ES.date){ES.err="Add a date, or switch on \u201CDate not announced yet.\u201D";render();return;}
+  var item={ id:ES.id||("u-"+Date.now()+"-"+Math.random().toString(36).slice(2,7)), type:ES.type, title:ES.title.trim(), service:svc,
+    date:ES.tba?null:ES.date };
+  if(ES.tba)item.tbaLabel=ES.tbaLabel.trim()||"2026";
+  if(ES.type==="show")item.cadence=ES.cadence;
+  if(ES.type==="show"&&ES.cadence==="weekly"&&ES.episodes)item.episodes=Number(ES.episodes);
+  if(ES.type==="show"&&!ES.tba&&ES.endDate)item.endDate=ES.endDate;
+  if(ES.genres.length)item.genres=ES.genres.slice();
+  if(ES.trailer.trim())item.trailer=ES.trailer.trim();
+  if(ES.note.trim())item.note=ES.note.trim();
+  if(ES.id&&S.list.some(function(x){return x.id===ES.id;})) S.list=S.list.map(function(x){return x.id===ES.id?item:x;});
+  else S.list=S.list.concat([item]);
+  S.edit=null; ES=null; persist();
+}
+function onClick(ev){
+  if(ev.target&&ev.target.classList&&ev.target.classList.contains("wl-overlay")){ S.edit=null;ES=null;render();return; }
+  var el=ev.target.closest?ev.target.closest("[data-act]"):null;
+  if(!el)return;
+  var a=el.getAttribute("data-act"), id=el.getAttribute("data-id");
+  if(a==="tab"){ S.tab=el.getAttribute("data-tab"); if(S.tab==="browse")markSeenAll(); render(); }
+  else if(a==="kind"){ S.kind=el.getAttribute("data-kind"); render(); }
+  else if(a==="genre"){ S.genre=el.getAttribute("data-genre"); render(); }
+  else if(a==="group"){ S.groupBy=el.getAttribute("data-group"); render(); }
+  else if(a==="add"){ S.edit=true; openEditor(null); render(); }
+  else if(a==="edit"){ S.edit=true; openEditor(byId(S.list,id)); render(); }
+  else if(a==="ask-remove"){ S.confirm=id; render(); }
+  else if(a==="cancel-remove"){ S.confirm=null; render(); }
+  else if(a==="remove"){ S.list=S.list.filter(function(x){return x.id!==id;}); S.confirm=null; persist(); }
+  else if(a==="toggle-watched"){ S.list=S.list.map(function(x){return x.id===id?Object.assign({},x,{watched:!x.watched}):x;}); S.confirm=null; persist(); }
+  else if(a==="toggle-cat"){ if(inList(id)){ S.list=S.list.filter(function(x){return x.id!==id;}); } else { var c=byId(CATALOGUE,id); if(c){ var r={}; for(var k in c){ if(k!=="starter")r[k]=c[k]; } S.list=S.list.concat([r]); } } persist(); }
+  else if(a==="close"){ S.edit=null; ES=null; render(); }
+  else if(a==="save"){ saveEditor(); }
+  else if(a==="m-type"){ readInputs(); ES.type=el.getAttribute("data-type"); render(); }
+  else if(a==="m-cad"){ readInputs(); ES.cadence=el.getAttribute("data-cad"); render(); }
+  else if(a==="m-tba"){ readInputs(); ES.tba=!ES.tba; render(); }
+  else if(a==="m-genre"){ readInputs(); var g=el.getAttribute("data-genre"); var i=ES.genres.indexOf(g); if(i>=0)ES.genres.splice(i,1); else ES.genres.push(g); render(); }
+}
+document.addEventListener("click",onClick);
+document.addEventListener("input",function(e){ if(e.target&&e.target.id==="wl-search"){ S.query=e.target.value; fillResults(); } });
+load(); render(); fetchRemote();
+</script>
+</body>
+</html>

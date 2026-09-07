@@ -1,0 +1,36 @@
+name: Refresh watchlist data
+
+on:
+  schedule:
+    - cron: "0 8 * * *"      # every day at 08:00 UTC
+  workflow_dispatch: {}        # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate catalogue.json
+        run: node tmdb-refresh.mjs
+        env:
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+
+      - name: Commit if anything changed
+        run: |
+          if ! git diff --quiet catalogue.json; then
+            git config user.name  "watchlist-bot"
+            git config user.email "watchlist-bot@users.noreply.github.com"
+            git add catalogue.json
+            git commit -m "Refresh catalogue ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "No changes."
+          fi
